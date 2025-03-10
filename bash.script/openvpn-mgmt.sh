@@ -6,7 +6,6 @@ normal=$(tput sgr0 2>/dev/null || echo "")
 
 # Get the script filename
 scriptFile=$(basename "$BASH_SOURCE")
-#!/bin/bash
 
 # Script to check for updates on GitHub and update the script if a new version is available.
 scriptOnGitHub="https://raw.githubusercontent.com/mar-tin-666/openvpn-management-script/refs/heads/main/bash.script/openvpn-mgmt.sh"
@@ -142,6 +141,7 @@ hr() {
   numfmt --to=iec-i --suffix=B "${1}"
 }
 
+# Function to list connected clients
 listInfoClients() {
   {
     printf "\e[4mName\e[0m  \t  \e[4mRemote IP\e[0m  \t  \e[4mNet name\e[0m  \t "
@@ -177,6 +177,7 @@ listInfoClients() {
   } | column -t -s $'\t'
 }
 
+# Function to show connected users
 showInfo() {
     NAMES=()
     LOGS=()
@@ -363,8 +364,6 @@ restartServers() {
         fi
     done
 }
-
-
 
 # Command handling
 case "$1" in

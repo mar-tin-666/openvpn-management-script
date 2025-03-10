@@ -1,0 +1,42 @@
+# ---
+# useful commands
+# ---
+
+# environment initialization
+./easyrsa init-pki
+
+# create CA certificate (no password)
+./easyrsa build-ca nopass
+
+# generate server key and certificate
+./easyrsa gen-req nazwa_server nopass
+./easyrsa sign-req server nazwa_servera
+
+#generate Diffie-Hellman parameters (required for secure key exchange)
+./easyrsa gen-dh
+
+#generate TLS key (target directory may be different)
+openvpn --genkey secret /etc/openvpn/easy-rsa/3/ta.key
+
+# generate crl (certificate revocation list) - must always be called after manual revocation!
+./easyrsa gen-crl
+
+
+# --- 
+# other 
+# ---
+
+# enable ip forwarding - add/uncomment in /etc/sysctl.conf:
+net.ipv4.ip_forward = 1
+
+# overload:
+sudo sysctl -p
+
+# firewall masquerade (ip and interface name to change)
+# firewalld
+firewall-cmd --permanent --add-masquerade
+firewall-cmd --permanent --direct --add-rule ipv4 nat POSTROUTING 0 -s 10.8.0.0/24 -o eth123 -j MASQUERADE
+firewall-cmd --reload
+
+# iptables v4 (in nat)
+-A POSTROUTING -s 10.8.0.0/24 -o eth123 -j MASQUERADE
