@@ -9,7 +9,7 @@ scriptFile=$(basename "$BASH_SOURCE")
 #!/bin/bash
 
 # Script to check for updates on GitHub and update the script if a new version is available.
-scriptOnGitHub="https://github.com/mar-tin-666/openvpn-management-script/bash.script/openvpn-mgmt.sh"
+scriptOnGitHub="https://raw.githubusercontent.com/mar-tin-666/openvpn-management-script/refs/heads/main/bash.script/openvpn-mgmt.sh"
 
 # Base OpenVPN configuration directory
 openvpnConfigPath="/etc/openvpn"
