@@ -94,8 +94,7 @@ checkAndUpdateScript() {
             echo "$remoteFileContent" > "$scriptFile"
             chmod +x "$scriptFile"  # Ensure the file remains executable
             echo "Update complete! Backup created: ${scriptFile}.bak"
-            echo "Restarting script with the new version..."
-            exec "$scriptFile" "$@"  # Restart script with all original parameters
+            exit 0  # Terminate script after update
         else
             echo "Update canceled. You are using an outdated version."
         fi
