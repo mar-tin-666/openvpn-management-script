@@ -72,10 +72,14 @@ checkAndUpdateScript() {
     echo "Checking for updates..."
 
     # Fetch remote file content
-    remoteFileContent=$(curl -s "$scriptOnGitHub")
+    remoteFileContent=$(curl -s -w "%{http_code}" "$scriptOnGitHub")
 
-    if [ -z "$remoteFileContent" ]; then
-        echo "Error: Failed to fetch the file from GitHub."
+    # Extract HTTP status code (last 3 characters of the response)
+    httpStatus="${remoteFileContent: -3}"
+    remoteFileContent="${remoteFileContent:0:-3}"
+
+    if [[ "$httpStatus" != "200" ]]; then
+        echo "Error: Failed to fetch the file from GitHub (HTTP $httpStatus)."
         exit 1
     fi
 
@@ -90,6 +94,8 @@ checkAndUpdateScript() {
             echo "$remoteFileContent" > "$scriptFile"
             chmod +x "$scriptFile"  # Ensure the file remains executable
             echo "Update complete! Backup created: ${scriptFile}.bak"
+            echo "Restarting script with the new version..."
+            exec "$scriptFile" "$@"  # Restart script with all original parameters
         else
             echo "Update canceled. You are using an outdated version."
         fi
