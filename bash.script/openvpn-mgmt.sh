@@ -14,16 +14,20 @@ scriptOnGitHub="https://raw.githubusercontent.com/mar-tin-666/openvpn-management
 openvpnConfigPath="/etc/openvpn"
 
 # Paths to configuration files and directories
-caCertFile="$openvpnConfigPath/easy-rsa/pki/ca.crt"
-taKeyFile="$openvpnConfigPath/easy-rsa/pki/ta.key"
+easyRsaPath="$openvpnConfigPath/easy-rsa"
+crlPemFile="$easyRsaPath/pki/crl.pem"
+openvpnCrlFile="$openvpnConfigPath/crl.pem"
+clientProfilesDir="/openvpn-client-profiles"
+caCertFile="$easyRsaPath/pki/ca.crt"
+taKeyFile="$easyRsaPath/pki/ta.key"
 configClientPath="$openvpnConfigPath/ccd"
 outputClientPath="$openvpnConfigPath/client-profiles"
 removedClientPath="$openvpnConfigPath/client-removed"
 baseClientPath="$openvpnConfigPath/client-base"
 logsPath="/var/log/openvpn"
-reqPath="$openvpnConfigPath/easy-rsa/pki/reqs"
-issuedPath="$openvpnConfigPath/easy-rsa/pki/issued"
-privatePath="$openvpnConfigPath/easy-rsa/pki/private"
+reqPath="$easyRsaPath/pki/reqs"
+issuedPath="$easyRsaPath/pki/issued"
+privatePath="$easyRsaPath/pki/private"
 
 # Ensure required directories exist
 for dir in "$configClientPath" "$outputClientPath" "$removedClientPath"; do
@@ -207,12 +211,6 @@ showInfo() {
         listInfoClients
         echo ""
     done
-    echo "Fetching connected users..."
-    for log_file in "$logsPath"/*; do
-        if [[ -f "$log_file" ]]; then
-            grep 'CONNECTED' "$log_file"
-        fi
-    done
 }
 
 # Function to show login history
@@ -253,7 +251,7 @@ addProfile() {
         echo " Or use command: $scriptFile remove $profileName"
         exit 1
     else
-        cd /etc/openvpn/easy-rsa/ || exit
+        cd "$easyRsaPath" || exit
         echo "Generating profile for client ${bold}$profileName${normal}"
         ./easyrsa build-client-full "$profileName" nopass
         cp "$baseClientPath/$baseClientConfig" "$outputClientPath/$profileName.ovpn"
@@ -303,12 +301,13 @@ removeProfile() {
                 [[ -f "$outputClientPath/$profileName.ovpn" ]] && mv -f "$outputClientPath/$profileName.ovpn" "$backup"
                 [[ -f "$configClientPath/$profileName" ]] && mv -f "$configClientPath/$profileName" "$backup"
 
+        
                 echo "Backup created: $backup"
                 echo "Refreshing CRL..."
-                cd /etc/openvpn/easy-rsa || exit
+                cd "$easyRsaPath" || exit
                 ./easyrsa gen-crl
-                cp /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn
-                chmod 644 /etc/openvpn/crl.pem
+                cp "$crlPemFile" "$openvpnCrlFile"
+                chmod 644 "$openvpnCrlFile"
                 cd - > /dev/null || exit
 
                 echo ""
@@ -340,8 +339,7 @@ copyProfiles() {
             echo "Home directory for local user '$localUserName' does not exist!"
             exit 1
         fi
-
-        local targetDir="$userHome/openvpn-client-profiles"
+        local targetDir="$userHome$clientProfilesDir"
         [[ -d "$targetDir" ]] && rm -rf "$targetDir"
         mkdir -p "$targetDir"
         cp -r "$outputClientPath/"* "$targetDir"
