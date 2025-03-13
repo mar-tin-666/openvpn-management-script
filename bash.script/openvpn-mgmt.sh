@@ -134,13 +134,19 @@ checkCertificates() {
 # Function to list user profiles
 listClients() {
     echo "List of client profiles:"
-    ls "$outputClientPath"/*.ovpn 2>/dev/null | sed 's/.*\///; s/\.ovpn$//'
+    ls "$outputClientPath"/*.ovpn 2>/dev/null | sed 's/.*\///; s/\.ovpn$//' || echo "No profiles found."
 }
 
 # Function to list base configurations
 listConfigs() {
     echo "List of base configurations:"
     ls "$baseClientPath" 2>/dev/null || echo "No configurations found."
+}
+
+# Function to list servers
+listServers() {
+    echo "List of servers:"
+    ls "$serverConfigPath/$serverConfigPrefix"*.conf 2>/dev/null | sed 's/.*\///; s/\.conf$//' || echo "No servers found."
 }
 
 # Function to show connected users
@@ -381,6 +387,7 @@ case "$1" in
         case "$2" in
             profiles) listClients ;;
             configs) listConfigs ;;
+            servers) listServers ;;
             *) usage ;;
         esac
         ;;
