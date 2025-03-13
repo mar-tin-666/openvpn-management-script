@@ -358,14 +358,12 @@ copyProfiles() {
 
 # Restart OpenVPN service (with all servers)
 restartServers() {
-    echo "Restarting OpenVPN service..."
-    systemctl restart openvpn
     echo "Restarting OpenVPN servers..."
     for file in "$serverConfigPath/$serverConfigPrefix"*.conf; do
         if [[ -f "$file" ]]; then
-            filename="${file%.conf}"
+            filename="$(basename "${file%.conf}")"
             echo "- $filename"
-            systemctl restart openvpn@$filename
+            systemctl restart openvpn-server@$filename
         fi
     done
 }
