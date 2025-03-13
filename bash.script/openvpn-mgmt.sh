@@ -14,6 +14,8 @@ scriptOnGitHub="https://raw.githubusercontent.com/mar-tin-666/openvpn-management
 openvpnConfigPath="/etc/openvpn"
 
 # Paths to configuration files and directories
+serverConfigPrefix=""
+serverConfigPath="$openvpnConfigPath/server"
 easyRsaPath="$openvpnConfigPath/easy-rsa"
 crlPemFile="$easyRsaPath/pki/crl.pem"
 openvpnCrlFile="$openvpnConfigPath/crl.pem"
@@ -190,7 +192,7 @@ listInfoClients() {
 showInfo() {
     NAMES=()
     LOGS=()
-    for conf in "$openvpnConfigPath"/server-*.conf; do
+    for conf in "$serverConfigPath/$serverConfigPrefix"*.conf; do
         if [[ -f "$conf" ]]; then
             name=$(basename "$conf" | sed 's/server-\(.*\)\.conf/\1/')
             NAMES+=("$name")
@@ -359,7 +361,7 @@ restartServers() {
     echo "Restarting OpenVPN service..."
     systemctl restart openvpn
     echo "Restarting OpenVPN servers..."
-    for file in server-*.conf; do
+    for file in "$serverConfigPath/$serverConfigPrefix"*.conf; do
         if [[ -f "$file" ]]; then
             filename="${file%.conf}"
             echo "- $filename"
