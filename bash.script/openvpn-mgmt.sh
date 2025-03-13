@@ -64,13 +64,37 @@ usage() {
   check {numberOfDays}                    - Checks certificates expiring within the given number of days.
   list profiles                           - Displays the list of user profiles.
   list configs                            - Displays the list of base configurations.
+  list servers                            - Displays the list of servers.
   info                                    - Shows currently connected users.
   log {username}                          - Displays the login and disconnection history of a user.
+  status                                  - Displays the status of OpenVPN servers.
   restart                                 - Restarts the OpenVPN service and all servers.
   update                                  - Checks for updates and updates the script.
 
 EOF
     exit 1
+}
+
+# Function to check server status
+checkServerStatus() {
+    echo "Checking OpenVPN server statuses..."
+    for file in "$serverConfigPath/$serverConfigPrefix"*.conf; do
+        if [[ -f "$file" ]]; then
+            filename="$(basename "$file" .conf)"
+            serviceName="openvpn-server@$filename"
+            systemctl is-active --quiet "$serviceName"
+            if [[ $? -eq 0 ]]; then
+                echo "[Running] $filename"
+            else
+                logFile=$(grep '^log ' "$file" | awk '{print $2}')
+                logEntry="No log file found"
+                if [[ -f "$logFile" ]]; then
+                    logEntry=$(tail -n 1 "$logFile")
+                fi
+                echo "[Stopped] $filename: $logEntry"
+            fi
+        fi
+    done
 }
 
 # Function to check for updates and update the script
@@ -382,6 +406,7 @@ case "$1" in
     info) showInfo ;;
     check) checkCertificates "$2" ;;
     log) showLog "$2" ;;
+    status) checkServerStatus ;;
     restart) restartServers ;;
     list)
         case "$2" in
