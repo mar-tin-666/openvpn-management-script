@@ -200,7 +200,7 @@ showInfo() {
     LOGS=()
     for conf in "$serverConfigPath/$serverConfigPrefix"*.conf; do
         if [[ -f "$conf" ]]; then
-            name=$(basename "$conf" | sed 's/server-\(.*\)\.conf/\1/')
+            name=$(basename "$conf" | sed 's/.*\///; s/\.conf$//')
             NAMES+=("$name")
             status_log=$(grep '^status ' "$conf" | awk '{print $2}')
             LOGS+=("$status_log")
