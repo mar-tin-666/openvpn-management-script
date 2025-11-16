@@ -51,49 +51,31 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# Function to display available options
-#  Commands:
-#   add {profileName} {profileBaseConfig}   - Adds a new client profile.
-#   remove {profileName}                    - Removes a client profile.
-#   copy {localUserName}                    - Copies client profiles to the user's home directory.
-#   check {numberOfDays}                    - Checks certificates expiring within the given number of days.
-#   list profiles                           - Displays the list of user profiles.
-#   list configs                            - Displays the list of base configurations.
-#   list servers                            - Displays the list of servers.
-#   info                                    - Shows currently connected users.
-#   log {username}                          - Displays the login and disconnection history of a user.
-#   status                                  - Displays the status of OpenVPN servers.
-#   restart                                 - Restarts the OpenVPN service and all servers.
-#   update                                  - Checks for updates and updates the script.
-
-
-###
-### do konfiga trzeba dodać edytor, domyślnie nano
-###
+# Function to display usage information
 usage() {
     cat <<EOF
  Usage: $scriptFile <command>
 
  Commands:
-  profile add {profileName} {profileBaseConfig}   - Adds a new client profile.
-  profile remove {profileName}                    - Removes a client profile.
-  profile copy {localUserName}                    - Copies client profiles to the user's home directory.
-  profile chceck {numberOfDays}                    - Checks certificates expiring within the given number of days.
-  profile list                            - Displays the list of user profiles.
-  profile configs                            - Displays the list of base configurations.
-  profile log {profileName}                          - Displays the login and disconnection history of a user.
-  profile config view {profileName}                          - Clienct config file.
-  profile config edit {profileName}                          - Clienct config file.
-  profile info {profileName}
-  profile edit {profileName}
-  server list                            - Displays the list of servers.
-  server status                                  - Displays the status of OpenVPN servers.
-  server start {option: serverName}     - Restarts the OpenVPN all or given servers.
-  server stop {option: serverName}     - Restarts the OpenVPN all or given servers.
-  server restart {option: serverName}     - Restarts the OpenVPN all or given servers.
-  server edit {serverName}
-  server info                                    - Shows currently connected users.
-  update                                  - Checks for updates and updates the script.
+  profile add {profileName} {profileBaseConfig} - Adds a new client profile.
+  profile remove {profileName}                  - Removes a client profile.
+  profile copy {localUserName}                  - Copies client profiles to the user's home directory.
+  profile check {numberOfDays}                  - Checks certificates expiring within the given number of days.
+  profile list                                  - Displays the list of user profiles.
+  profile configs                               - Displays the list of base configurations.
+  profile log {profileName}                     - Displays the login and disconnection history of a user.
+  profile config view {profileName}             - Clienct config file.
+  profile config edit {profileName}             - Clienct config file.
+  profile info {profileName}                    - Displays information about a client profile.
+  profile edit {profileName}                    - Edits client profile configuration file.
+  server list                                   - Displays the list of servers.
+  server status                                 - Displays the status of OpenVPN servers.
+  server start {option: serverName}             - Restarts the OpenVPN all or given servers.
+  server stop {option: serverName}              - Restarts the OpenVPN all or given servers.
+  server restart {option: serverName}           - Restarts the OpenVPN all or given servers.
+  server edit {serverName}                      - Edits server configuration file.
+  server info                                   - Shows currently connected users.
+  update                                        - Checks for updates and updates the script.
 
 EOF
     exit 1
