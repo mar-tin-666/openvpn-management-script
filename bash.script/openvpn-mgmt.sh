@@ -231,7 +231,7 @@ listInfoClients() {
         else
           printf "%'d  \t  %'d" "${array[5]}" "${array[6]}"
         fi
-        printf "  \t  %s %s %s " "${array[7]}" "(${array[87]})"
+        printf "  \t  %s %s %s " "${array[7]}" "(${array[8]})"
         printf "\n"
       done < "${STATUS_LOG}"
     else
