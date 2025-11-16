@@ -14,7 +14,6 @@ scriptOnGitHub="https://raw.githubusercontent.com/mar-tin-666/openvpn-management
 openvpnConfigPath="/etc/openvpn"
 
 # Paths to configuration files and directories
-serverConfigPrefix=""
 serverConfigPath="$openvpnConfigPath/server"
 easyRsaPath="$openvpnConfigPath/easy-rsa"
 crlPemFile="$easyRsaPath/pki/crl.pem"
@@ -53,22 +52,47 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # Function to display available options
+#  Commands:
+#   add {profileName} {profileBaseConfig}   - Adds a new client profile.
+#   remove {profileName}                    - Removes a client profile.
+#   copy {localUserName}                    - Copies client profiles to the user's home directory.
+#   check {numberOfDays}                    - Checks certificates expiring within the given number of days.
+#   list profiles                           - Displays the list of user profiles.
+#   list configs                            - Displays the list of base configurations.
+#   list servers                            - Displays the list of servers.
+#   info                                    - Shows currently connected users.
+#   log {username}                          - Displays the login and disconnection history of a user.
+#   status                                  - Displays the status of OpenVPN servers.
+#   restart                                 - Restarts the OpenVPN service and all servers.
+#   update                                  - Checks for updates and updates the script.
+
+
+###
+### do konfiga trzeba dodać edytor, domyślnie nano
+###
 usage() {
     cat <<EOF
  Usage: $scriptFile <command>
 
  Commands:
-  add {profileName} {profileBaseConfig}   - Adds a new client profile.
-  remove {profileName}                    - Removes a client profile.
-  copy {localUserName}                    - Copies client profiles to the user's home directory.
-  check {numberOfDays}                    - Checks certificates expiring within the given number of days.
-  list profiles                           - Displays the list of user profiles.
-  list configs                            - Displays the list of base configurations.
-  list servers                            - Displays the list of servers.
-  info                                    - Shows currently connected users.
-  log {username}                          - Displays the login and disconnection history of a user.
-  status                                  - Displays the status of OpenVPN servers.
-  restart                                 - Restarts the OpenVPN service and all servers.
+  profile add {profileName} {profileBaseConfig}   - Adds a new client profile.
+  profile remove {profileName}                    - Removes a client profile.
+  profile copy {localUserName}                    - Copies client profiles to the user's home directory.
+  profile chceck {numberOfDays}                    - Checks certificates expiring within the given number of days.
+  profile list                            - Displays the list of user profiles.
+  profile configs                            - Displays the list of base configurations.
+  profile log {profileName}                          - Displays the login and disconnection history of a user.
+  profile config view {profileName}                          - Clienct config file.
+  profile config edit {profileName}                          - Clienct config file.
+  profile info {profileName}
+  profile edit {profileName}
+  server list                            - Displays the list of servers.
+  server status                                  - Displays the status of OpenVPN servers.
+  server start {option: serverName}     - Restarts the OpenVPN all or given servers.
+  server stop {option: serverName}     - Restarts the OpenVPN all or given servers.
+  server restart {option: serverName}     - Restarts the OpenVPN all or given servers.
+  server edit {serverName}
+  server info                                    - Shows currently connected users.
   update                                  - Checks for updates and updates the script.
 
 EOF
@@ -78,7 +102,7 @@ EOF
 # Function to check server status
 checkServerStatus() {
     echo "Checking OpenVPN server statuses..."
-    for file in "$serverConfigPath/$serverConfigPrefix"*.conf; do
+    for file in "$serverConfigPath"/*.conf; do
         if [[ -f "$file" ]]; then
             filename="$(basename "$file" .conf)"
             serviceName="openvpn-server@$filename"
@@ -170,7 +194,7 @@ listConfigs() {
 # Function to list servers
 listServers() {
     echo "List of servers:"
-    ls "$serverConfigPath/$serverConfigPrefix"*.conf 2>/dev/null | sed 's/.*\///; s/\.conf$//' || echo "No servers found."
+    ls "$serverConfigPath"/*.conf 2>/dev/null | sed 's/.*\///; s/\.conf$//' || echo "No servers found."
 }
 
 # Function to show connected users
@@ -191,7 +215,7 @@ listInfoClients() {
 
     if grep -q "^CLIENT_LIST" "${STATUS_LOG}"; then
       while read -r line; do
-        read -r -a array <<< "${line}"
+        IFS=',' read -r -a array <<< "${line}"
 
         [[ "${array[0]}" == 'CLIENT_LIST' ]] || continue
 
@@ -203,11 +227,11 @@ listInfoClients() {
         printf "%s  \t  " "${array[3]}"
 
         if [[ "${HR}" == 1 ]]; then
-          printf "%s  \t  %s" "$(hr "${array[4]}")" "$(hr "${array[5]}")"
+          printf "%s  \t  %s" "$(hr "${array[5]}")" "$(hr "${array[6]}")"
         else
-          printf "%'d  \t  %'d" "${array[4]}" "${array[5]}"
+          printf "%'d  \t  %'d" "${array[5]}" "${array[6]}"
         fi
-        printf "  \t  %s %s %s " "${array[6]}" "${array[7]}"
+        printf "  \t  %s %s %s " "${array[7]}" "(${array[87]})"
         printf "\n"
       done < "${STATUS_LOG}"
     else
@@ -222,7 +246,7 @@ listInfoClients() {
 showInfo() {
     NAMES=()
     LOGS=()
-    for conf in "$serverConfigPath/$serverConfigPrefix"*.conf; do
+    for conf in "$serverConfigPath"/*.conf; do
         if [[ -f "$conf" ]]; then
             name=$(basename "$conf" | sed 's/.*\///; s/\.conf$//')
             NAMES+=("$name")
@@ -319,7 +343,7 @@ removeProfile() {
     fi
 
     if [[ -f "$reqPath/$profileName.req" || -f "$issuedPath/$profileName.crt" || -f "$privatePath/$profileName.key" || -f "$outputClientPath/$profileName.ovpn" ]]; then
-        read -rp "Are you sure you want to remove client ${bold}$profileName${normal} (y/n)? " choice
+        read -rp "Are you sure you want to remove client profile ${bold}$profileName${normal} (y/n)? " choice
         case "$choice" in
             y|Y )
                 local timestamp
@@ -333,7 +357,7 @@ removeProfile() {
                 [[ -f "$outputClientPath/$profileName.ovpn" ]] && mv -f "$outputClientPath/$profileName.ovpn" "$backup"
                 [[ -f "$configClientPath/$profileName" ]] && mv -f "$configClientPath/$profileName" "$backup"
 
-        
+
                 echo "Backup created: $backup"
                 echo "Refreshing CRL..."
                 cd "$easyRsaPath" || exit
@@ -389,10 +413,10 @@ copyProfiles() {
 # Restart OpenVPN service (with all servers)
 restartServers() {
     echo "Restarting OpenVPN servers..."
-    for file in "$serverConfigPath/$serverConfigPrefix"*.conf; do
+    for file in "$serverConfigPath"/*.conf; do
         if [[ -f "$file" ]]; then
-            filename="$(basename "${file%.conf}")"
-            echo "- $filename"
+            filename="$(basename "$file" .conf)"
+            echo "[Restarting] $filename"
             systemctl restart openvpn-server@$filename
         fi
     done
